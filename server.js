@@ -40,7 +40,6 @@ const handlePatchTodo = (req, res, body) => {
       responseHandle(res, "400", todos);
     }
   } catch (error) {
-    console.log("我是 catch");
     responseHandle(res, "400", todos);
   }
 };
@@ -77,29 +76,38 @@ const requestListener = (req, res) => {
     body += chunk;
   });
 
+  // 刪除跟編輯網址判斷（單筆）
+  const todoRegex = /^\/todos\/[a-zA-Z0-9_-]+$/;
+
   switch (req.method) {
     case "GET":
       if (req.url === "/todos") {
         handleGetTodos(res);
+      } else {
+        handleNotFound(res);
       }
       break;
     case "POST":
       if (req.url === "/todos") {
         req.on("end", () => handlePostTodo(res, body));
+      } else {
+        handleNotFound(res);
       }
       break;
     case "PATCH":
-      if (req.url.startsWith("/todos/")) {
-        console.log("編輯成立");
+      if (todoRegex.test(req.url)) {
         req.on("end", () => handlePatchTodo(req, res, body));
+      } else {
+        handleNotFound(res);
       }
       break;
     case "DELETE":
       if (req.url === "/todos") {
         handleDeleteAllTodos(res);
-      } else if (req.url.startsWith("/todos/")) {
+      } else if (todoRegex.test(req.url)) {
         handleDeleteTodo(req, res);
       } else {
+        handleNotFound(res);
       }
       break;
     case "OPTIONS":
